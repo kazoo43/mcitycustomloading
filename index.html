@@ -57,13 +57,17 @@
             left: 0;
             width: 200%;
             height: 200%;
+            /* Temporarily removed grid to test visibility */
+            /*
             background-image: 
                 linear-gradient(rgba(255, 255, 255, 0.05) 1px, transparent 1px),
                 linear-gradient(90deg, rgba(255, 255, 255, 0.05) 1px, transparent 1px);
+            */
             background-size: 64px 64px;
             z-index: -1;
             animation: grid-move 20s linear infinite;
             pointer-events: none;
+            display: none; /* Hidden for now */
         }
 
         @keyframes grid-move {
