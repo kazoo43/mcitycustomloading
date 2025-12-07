@@ -12,7 +12,7 @@
             height: 100%;
             overflow: hidden;
             font-family: 'Courier New', monospace;
-            background-color: #0a0a0a;
+            /* background-color: #0a0a0a;  <-- Removed to prevent blocking images */
             color: #ff7300;
         }
 
@@ -22,7 +22,7 @@
             left: 0;
             width: 100%;
             height: 100%;
-            z-index: -3;
+            z-index: 0; /* Brought up from -3 */
             overflow: hidden;
             background: #000;
         }
@@ -38,7 +38,7 @@
             opacity: 0;
             transform: scale(1);
             transition: opacity 1.5s ease-in-out;
-            z-index: -2;
+            z-index: 1; /* Inside container */
         }
 
         .bg-slide.active {
@@ -57,17 +57,13 @@
             left: 0;
             width: 200%;
             height: 200%;
-            /* Temporarily removed grid to test visibility */
-            /*
             background-image: 
                 linear-gradient(rgba(255, 255, 255, 0.05) 1px, transparent 1px),
                 linear-gradient(90deg, rgba(255, 255, 255, 0.05) 1px, transparent 1px);
-            */
             background-size: 64px 64px;
-            z-index: -1;
+            z-index: 2; /* Above images */
             animation: grid-move 20s linear infinite;
             pointer-events: none;
-            display: none; /* Hidden for now */
         }
 
         @keyframes grid-move {
@@ -82,7 +78,7 @@
             width: 100%;
             height: 100%;
             background: rgba(10, 10, 10, 0.4);
-            z-index: 0;
+            z-index: 3; /* Above grid */
         }
 
         .content {
@@ -92,7 +88,7 @@
             transform: translate(-50%, -50%);
             width: 600px;
             text-align: center;
-            z-index: 10;
+            z-index: 10; /* Top most */
         }
 
         h1 {
