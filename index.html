@@ -11,40 +11,64 @@
             width: 100%;
             height: 100%;
             overflow: hidden;
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-            background-color: #1a1a1a;
-            color: #ffffff;
+            font-family: 'Courier New', monospace;
+            background-color: #0a0a0a;
+            color: #ff7300;
         }
 
-        #bg {
+        #bg-container {
             position: absolute;
             top: 0;
             left: 0;
             width: 100%;
             height: 100%;
-            /* 
-               background: url('background.jpg') no-repeat center center fixed; 
-               You can use a local file if hosted, or a URL.
-               For now using a dark gradient as placeholder.
-            */
-            background: linear-gradient(135deg, #1e1e2f 0%, #2a2a40 100%);
+            z-index: -3;
+            overflow: hidden;
+            background: #000;
+        }
+
+        .bg-slide {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
             background-size: cover;
+            background-position: center;
+            opacity: 0;
+            transform: scale(1);
+            transition: opacity 1.5s ease-in-out;
             z-index: -2;
         }
 
-        /* If user provides background.jpg, this will overlay it */
-        #bg-image {
+        .bg-slide.active {
+            opacity: 1;
+            animation: kenburns 20s linear infinite alternate;
+        }
+
+        @keyframes kenburns {
+            0% { transform: scale(1) translate(0, 0); }
+            100% { transform: scale(1.15) translate(-2%, -1%); }
+        }
+
+        #grid-overlay {
             position: absolute;
             top: 0;
             left: 0;
-            width: 100%;
-            height: 100%;
-            background: url('background.jpg') no-repeat center center fixed;
-            background-size: cover;
-            filter: blur(3px);
+            width: 200%;
+            height: 200%;
+            background-image: 
+                linear-gradient(rgba(255, 255, 255, 0.05) 1px, transparent 1px),
+                linear-gradient(90deg, rgba(255, 255, 255, 0.05) 1px, transparent 1px);
+            background-size: 64px 64px;
             z-index: -1;
-            opacity: 0.8;
-            /* Hidden by default, user needs to add image */
+            animation: grid-move 20s linear infinite;
+            pointer-events: none;
+        }
+
+        @keyframes grid-move {
+            0% { transform: translate(0, 0); }
+            100% { transform: translate(-64px, -64px); }
         }
 
         #overlay {
@@ -53,105 +77,123 @@
             left: 0;
             width: 100%;
             height: 100%;
-            background: rgba(0, 0, 0, 0.4);
+            background: rgba(10, 10, 10, 0.4);
             z-index: 0;
         }
 
         .content {
             position: absolute;
-            top: 50%;
-            left: 50%;
-            transform: translate(-50%, -50%);
-            width: 70%;
-            max-width: 900px;
-            text-align: center;
-            z-index: 1;
+            bottom: 50px;
+            right: 50px;
+            width: 500px;
+            text-align: left;
+            z-index: 10;
         }
 
         h1 {
-            font-size: 4em;
-            margin-bottom: 0.1em;
-            text-shadow: 0 4px 10px rgba(0,0,0,0.5);
-            letter-spacing: 4px;
+            font-size: 3.5em;
+            margin-bottom: 0;
+            color: #ff7300;
+            text-shadow: 0 0 10px rgba(255, 115, 0, 0.5);
             text-transform: uppercase;
-            font-weight: 800;
+            font-weight: 700;
+            letter-spacing: 2px;
         }
 
         h2 {
-            font-size: 1.5em;
-            margin-bottom: 3em;
-            color: #ccc;
-            font-weight: 300;
-            text-shadow: 0 2px 5px rgba(0,0,0,0.5);
+            font-size: 1.2em;
+            margin-top: 5px;
+            margin-bottom: 20px;
+            color: #ff7300;
+            opacity: 0.8;
+            font-weight: 700;
+            text-transform: uppercase;
         }
 
         .status-box {
-            background: rgba(20, 20, 25, 0.85);
-            padding: 30px;
-            border-radius: 15px;
-            box-shadow: 0 10px 30px rgba(0,0,0,0.5);
-            border: 1px solid rgba(255, 255, 255, 0.05);
-            backdrop-filter: blur(10px);
-            transition: transform 0.3s ease;
+            background: rgba(0, 0, 0, 0.85);
+            padding: 20px;
+            border: 2px solid #ff7300;
+            box-shadow: 0 0 20px rgba(255, 115, 0, 0.2);
+            position: relative;
         }
 
-        .status-box:hover {
-            transform: translateY(-2px);
+        /* Decorative corner squares */
+        .status-box::before, .status-box::after {
+            content: '';
+            position: absolute;
+            width: 8px;
+            height: 8px;
+            background: #ff7300;
+            transition: all 0.3s ease;
         }
+        .status-box::before { top: -2px; left: -2px; }
+        .status-box::after { bottom: -2px; right: -2px; }
 
         #status-text {
             font-size: 1.4em;
-            margin-bottom: 10px;
-            color: #fff;
-            font-weight: 600;
-            text-align: left;
+            margin-bottom: 5px;
+            color: #ff7300;
+            font-weight: 700;
+            text-transform: uppercase;
         }
 
         #file-text {
-            font-size: 0.95em;
-            color: #aaa;
-            margin-bottom: 20px;
+            font-size: 0.9em;
+            color: #ffb366;
+            margin-bottom: 15px;
             white-space: nowrap;
             overflow: hidden;
             text-overflow: ellipsis;
-            height: 1.4em;
-            text-align: left;
-            font-family: 'Consolas', 'Courier New', monospace;
+            font-family: 'Courier New', monospace;
         }
 
         .progress-bar-bg {
             width: 100%;
-            height: 12px;
-            background-color: #333;
-            border-radius: 6px;
-            overflow: hidden;
+            height: 16px;
+            background-color: #111;
+            border: 1px solid #ff7300;
+            margin-bottom: 8px;
             position: relative;
-            margin-bottom: 10px;
         }
 
         .progress-bar-fill {
             height: 100%;
-            background: linear-gradient(90deg, #00d2ff, #3a7bd5);
+            background: #ff7300;
             width: 0%;
             transition: width 0.1s linear;
-            box-shadow: 0 0 15px rgba(0, 210, 255, 0.4);
+            box-shadow: 0 0 10px rgba(255, 115, 0, 0.5);
         }
 
         .stats {
             display: flex;
             justify-content: space-between;
-            font-size: 0.85em;
-            color: #888;
-            font-weight: 500;
+            font-size: 0.9em;
+            color: #ff7300;
+            font-weight: 700;
+        }
+
+        /* Scrolling code background effect */
+        .code-line {
+            position: absolute;
+            white-space: nowrap;
+            color: rgba(255, 115, 0, 0.2);
+            font-size: 14px;
+            z-index: -1;
+            animation: slideCode linear infinite;
+        }
+
+        @keyframes slideCode {
+            from { transform: translateX(-100%); }
+            to { transform: translateX(100vw); }
         }
 
     </style>
 </head>
 <body>
 
-    <div id="bg"></div>
-    <!-- If you have a background.jpg in the same folder, this will show it -->
-    <div id="bg-image"></div> 
+    <div id="bg-container"></div> 
+    <div id="grid-overlay"></div>
     <div id="overlay"></div>
 
     <div class="content">
@@ -174,6 +216,97 @@
     </div>
 
     <script>
+        // --- CONFIGURATION ---
+        // Add your image filenames here.
+        // Example: ["bg1.jpg", "bg2.png", "city_view.jpg"]
+        const backgroundImages = [
+            "imag1.png", 
+            "imag2.png",
+            "imag3.png"
+        ];
+        
+        const slideDuration = 5000; // Time in ms (5 seconds) per image
+        // ---------------------
+
+        // Slideshow Logic
+        const bgContainer = document.getElementById('bg-container');
+        let currentSlide = 0;
+
+        function initSlideshow() {
+            if (backgroundImages.length === 0) return;
+
+            // Preload images and create divs
+            backgroundImages.forEach((src, index) => {
+                const div = document.createElement('div');
+                div.className = 'bg-slide';
+                div.style.backgroundImage = `url('${src}')`;
+                if (index === 0) div.classList.add('active');
+                bgContainer.appendChild(div);
+            });
+
+            if (backgroundImages.length > 1) {
+                setInterval(nextSlide, slideDuration);
+            }
+        }
+
+        function nextSlide() {
+            const slides = document.querySelectorAll('.bg-slide');
+            slides[currentSlide].classList.remove('active');
+            
+            currentSlide = (currentSlide + 1) % slides.length;
+            
+            slides[currentSlide].classList.add('active');
+        }
+
+        initSlideshow();
+
+        // --- BACKGROUND CODE EFFECT ---
+        const codeSnippets = [
+            "hg = hg or {}",
+            "hg.Apperance = hg.Apperance or {}",
+            "util.AddNetworkString('GetAppearance')",
+            "ply:SetModel(ap.Model)",
+            "ply:SetNWString('PlayerName', ap.Name)",
+            "RenderAccessories(ent, ent:GetNetVar('Accessories'))",
+            "hook.Add('PlayerSpawn','RequestAppearanceOnSpawn',function(p) end)",
+            "surface.CreateFont('MC_TypewriterLarge',{font='Courier New',size=42})",
+            "surface.SetDrawColor(255,115,0)",
+            "loading_resources...",
+            "authenticating_user...",
+            "establishing_connection..."
+        ];
+
+        function createCodeLines() {
+            const container = document.body;
+            const lineCount = 15;
+            
+            for (let i = 0; i < lineCount; i++) {
+                const div = document.createElement('div');
+                div.className = 'code-line';
+                div.innerText = codeSnippets[Math.floor(Math.random() * codeSnippets.length)];
+                
+                // Randomize vertical position
+                div.style.top = Math.random() * 100 + "%";
+                
+                // Randomize speed and direction
+                const duration = 10 + Math.random() * 20; // 10-30s
+                div.style.animationDuration = duration + "s";
+                
+                // Randomize starting delay
+                div.style.animationDelay = "-" + (Math.random() * 20) + "s";
+
+                // Random font size opacity
+                div.style.opacity = 0.1 + Math.random() * 0.3;
+                div.style.fontSize = (12 + Math.random() * 8) + "px";
+                
+                container.insertBefore(div, document.getElementById('overlay'));
+            }
+        }
+        
+        createCodeLines();
+        // ------------------------------
+
+
         // GMod Loading Screen API implementation
         
         const statusText = document.getElementById('status-text');
