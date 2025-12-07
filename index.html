@@ -99,6 +99,9 @@
             text-transform: uppercase;
             font-weight: 700;
             letter-spacing: 2px;
+            /* Ensure height is reserved so layout doesn't jump */
+            min-height: 1.2em;
+            line-height: 1.2em;
         }
 
         h2 {
@@ -196,6 +199,7 @@
             min-height: 1.2em;
             text-shadow: 0 0 5px rgba(255, 115, 0, 0.3);
             opacity: 0.8;
+            transition: opacity 0.5s ease-in-out;
         }
 
         /* Scrolling code background effect */
@@ -243,7 +247,7 @@
 
     <div class="content">
         <h1 id="title-text"></h1>
-        <h2>Have a great time, Join the discord for feedback.</h2>
+        <h2>Please wait while we prepare your session</h2>
 
         <div class="status-box">
             <div id="status-text">Connecting to server...</div>
@@ -348,19 +352,21 @@
 
         // --- TIPS LOGIC ---
         const tipsContainer = document.getElementById('tips-container');
-        let currentTip = 0;
 
         function updateTip() {
             if (tips.length === 0) return;
             
-            // Simple fade effect could be added here, but for now just text switch
+            // Fade out
             tipsContainer.style.opacity = 0;
             
             setTimeout(() => {
-                tipsContainer.innerText = "TIP: " + tips[currentTip];
+                // Pick a random tip
+                let randomIndex = Math.floor(Math.random() * tips.length);
+                tipsContainer.innerText = "TIP: " + tips[randomIndex];
+                
+                // Fade in
                 tipsContainer.style.opacity = 0.8;
-                currentTip = (currentTip + 1) % tips.length;
-            }, 500);
+            }, 500); // Wait for fade out to finish (0.5s matches transition)
         }
 
         if (tips.length > 0) {
@@ -415,53 +421,66 @@
         // ------------------------------
 
 
-        // --- TITLE TYPEWRITER EFFECT ---
+        // Typewriter Effect
+        const titleText = document.getElementById('title-text');
         const titles = ["Crows ZCity", "MeleeCity"];
-        let currentTitleIndex = 0;
+        let titleIndex = 0;
+        let charIndex = 0;
         let isDeleting = false;
-        let txt = '';
-        let typeSpeed = 100;
-        const titleElement = document.getElementById('title-text');
-        
+        let isWaiting = false;
+
         function typeWriter() {
-            const currentFullTitle = titles[currentTitleIndex];
+            const currentTitle = titles[titleIndex];
             
+            // If waiting, do nothing but check time (handled by timeout)
+            if (isWaiting) return;
+
             if (isDeleting) {
-                // Backspacing
-                txt = currentFullTitle.substring(0, txt.length - 1);
-                typeSpeed = 50;
+                // Deleting logic
+                titleText.innerText = currentTitle.substring(0, charIndex - 1);
+                charIndex--;
+                
+                // When fully deleted
+                if (charIndex === 0) {
+                    isDeleting = false;
+                    titleIndex = (titleIndex + 1) % titles.length;
+                    // Ensure the header keeps its height by setting a non-breaking space if empty
+                    titleText.innerHTML = "&nbsp;";
+                }
             } else {
-                // Typing
-                // Add binary scramble effect before settling on the letter
-                txt = currentFullTitle.substring(0, txt.length + 1);
-                typeSpeed = 150;
-            }
+                // Typing logic with binary glitch effect
+                // ... (rest of logic)
+                
+                // If we are just starting or empty, ensure we use text not html
+                if (charIndex === 0) titleText.innerText = "";
+                
+                let displayText = currentTitle.substring(0, charIndex);
+                let nextChar = currentTitle.charAt(charIndex);
+                
+                // 50% chance to show binary 0/1 before real char
+                if (Math.random() > 0.5) {
+                    titleText.innerText = displayText + (Math.random() > 0.5 ? "0" : "1");
+                } else {
+                    titleText.innerText = displayText + nextChar;
+                }
+                
+                // Sometimes advance, sometimes just glitch
+                if (Math.random() > 0.3) {
+                     titleText.innerText = displayText + nextChar;
+                     charIndex++;
+                }
 
-            // Render text with binary glitch for the last character being typed
-            if (!isDeleting && txt.length < currentFullTitle.length) {
-                titleElement.innerHTML = txt + `<span style="color: #fff; opacity: 0.5;">${Math.random() > 0.5 ? '0' : '1'}</span>`;
-            } else {
-                titleElement.innerHTML = txt;
+                if (charIndex === currentTitle.length) {
+                    isWaiting = true;
+                    setTimeout(() => {
+                        isWaiting = false;
+                        isDeleting = true;
+                    }, 2000); // Wait 2s before deleting
+                }
             }
-            
-            // Logic for switching states
-            if (!isDeleting && txt === currentFullTitle) {
-                // Finished typing word, wait before deleting
-                typeSpeed = 3000; 
-                isDeleting = true;
-            } else if (isDeleting && txt === '') {
-                // Finished deleting, switch to next word
-                isDeleting = false;
-                currentTitleIndex = (currentTitleIndex + 1) % titles.length;
-                typeSpeed = 500;
-            }
-
-            setTimeout(typeWriter, typeSpeed);
         }
-
-        // Start the typing loop
-        typeWriter();
-        // ------------------------------
+        
+        setInterval(typeWriter, 100);
 
         // GMod Loading Screen API implementation
         
