@@ -1,0 +1,262 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Loading...</title>
+    <style>
+        body, html {
+            margin: 0;
+            padding: 0;
+            width: 100%;
+            height: 100%;
+            overflow: hidden;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background-color: #1a1a1a;
+            color: #ffffff;
+        }
+
+        #bg {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            /* 
+               background: url('background.jpg') no-repeat center center fixed; 
+               You can use a local file if hosted, or a URL.
+               For now using a dark gradient as placeholder.
+            */
+            background: linear-gradient(135deg, #1e1e2f 0%, #2a2a40 100%);
+            background-size: cover;
+            z-index: -2;
+        }
+
+        /* If user provides background.jpg, this will overlay it */
+        #bg-image {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: url('background.jpg') no-repeat center center fixed;
+            background-size: cover;
+            filter: blur(3px);
+            z-index: -1;
+            opacity: 0.8;
+            /* Hidden by default, user needs to add image */
+        }
+
+        #overlay {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.4);
+            z-index: 0;
+        }
+
+        .content {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            width: 70%;
+            max-width: 900px;
+            text-align: center;
+            z-index: 1;
+        }
+
+        h1 {
+            font-size: 4em;
+            margin-bottom: 0.1em;
+            text-shadow: 0 4px 10px rgba(0,0,0,0.5);
+            letter-spacing: 4px;
+            text-transform: uppercase;
+            font-weight: 800;
+        }
+
+        h2 {
+            font-size: 1.5em;
+            margin-bottom: 3em;
+            color: #ccc;
+            font-weight: 300;
+            text-shadow: 0 2px 5px rgba(0,0,0,0.5);
+        }
+
+        .status-box {
+            background: rgba(20, 20, 25, 0.85);
+            padding: 30px;
+            border-radius: 15px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.5);
+            border: 1px solid rgba(255, 255, 255, 0.05);
+            backdrop-filter: blur(10px);
+            transition: transform 0.3s ease;
+        }
+
+        .status-box:hover {
+            transform: translateY(-2px);
+        }
+
+        #status-text {
+            font-size: 1.4em;
+            margin-bottom: 10px;
+            color: #fff;
+            font-weight: 600;
+            text-align: left;
+        }
+
+        #file-text {
+            font-size: 0.95em;
+            color: #aaa;
+            margin-bottom: 20px;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            height: 1.4em;
+            text-align: left;
+            font-family: 'Consolas', 'Courier New', monospace;
+        }
+
+        .progress-bar-bg {
+            width: 100%;
+            height: 12px;
+            background-color: #333;
+            border-radius: 6px;
+            overflow: hidden;
+            position: relative;
+            margin-bottom: 10px;
+        }
+
+        .progress-bar-fill {
+            height: 100%;
+            background: linear-gradient(90deg, #00d2ff, #3a7bd5);
+            width: 0%;
+            transition: width 0.1s linear;
+            box-shadow: 0 0 15px rgba(0, 210, 255, 0.4);
+        }
+
+        .stats {
+            display: flex;
+            justify-content: space-between;
+            font-size: 0.85em;
+            color: #888;
+            font-weight: 500;
+        }
+
+    </style>
+</head>
+<body>
+
+    <div id="bg"></div>
+    <!-- If you have a background.jpg in the same folder, this will show it -->
+    <div id="bg-image"></div> 
+    <div id="overlay"></div>
+
+    <div class="content">
+        <h1>SERVER LOADING</h1>
+        <h2>Please wait while we prepare your session</h2>
+
+        <div class="status-box">
+            <div id="status-text">Connecting to server...</div>
+            <div id="file-text">Initializing...</div>
+            
+            <div class="progress-bar-bg">
+                <div class="progress-bar-fill" id="progress-bar"></div>
+            </div>
+            
+            <div class="stats">
+                <span id="files-count">Files: 0/0</span>
+                <span id="percentage">0%</span>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // GMod Loading Screen API implementation
+        
+        const statusText = document.getElementById('status-text');
+        const fileText = document.getElementById('file-text');
+        const progressBar = document.getElementById('progress-bar');
+        const filesCount = document.getElementById('files-count');
+        const percentage = document.getElementById('percentage');
+
+        let totalFiles = 0;
+        let neededFiles = 0;
+        let downloadedFiles = 0;
+
+        // Called when a file starts downloading
+        function DownloadingFile(fileName) {
+            fileText.innerText = "Downloading " + fileName;
+            
+            // Sometimes GMod calls this without updating needed/total
+            // We update the view here
+            refreshProgress();
+        }
+
+        // Called when the status changes (e.g., "Sending client info...")
+        function SetStatus(status) {
+            statusText.innerText = status;
+            
+            // Clear file text if not downloading
+            if (status.indexOf("Downloading") === -1 && status.indexOf("Workshop") === -1) {
+                fileText.innerText = "";
+            }
+        }
+
+        // Called to set the total number of files to download
+        function SetFilesTotal(total) {
+            totalFiles = total;
+            refreshProgress();
+        }
+
+        // Called to set the number of files needed
+        function SetFilesNeeded(needed) {
+            neededFiles = needed;
+            refreshProgress();
+        }
+
+        function refreshProgress() {
+            if (totalFiles > 0) {
+                // neededFiles decreases as we download
+                // downloaded = total - needed
+                let currentDownloaded = totalFiles - neededFiles;
+                
+                // Calculate percentage
+                let progress = (currentDownloaded / totalFiles) * 100;
+                
+                // Clamp
+                progress = Math.max(0, Math.min(100, progress));
+                
+                // Update UI
+                progressBar.style.width = progress + "%";
+                percentage.innerText = Math.round(progress) + "%";
+                filesCount.innerText = currentDownloaded + " / " + totalFiles;
+            }
+        }
+        
+        // --- Testing / Fallback ---
+        // Uncomment to test in browser without GMod
+        /*
+        setTimeout(() => {
+            SetStatus("Downloading Addons...");
+            SetFilesTotal(100);
+            SetFilesNeeded(100);
+            
+            let i = 0;
+            let interval = setInterval(() => {
+                i++;
+                SetFilesNeeded(100 - i);
+                DownloadingFile("models/props_c17/furniture_" + i + ".mdl");
+                if (i >= 100) {
+                    clearInterval(interval);
+                    SetStatus("Sending Client Info...");
+                }
+            }, 50);
+        }, 1000);
+        */
+
+    </script>
+</body>
+</html>
