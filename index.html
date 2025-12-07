@@ -187,6 +187,17 @@
             margin-top: 10px;
         }
 
+        #tips-container {
+            margin-top: 20px;
+            font-size: 1em;
+            color: #ff7300;
+            text-transform: uppercase;
+            font-weight: bold;
+            min-height: 1.2em;
+            text-shadow: 0 0 5px rgba(255, 115, 0, 0.3);
+            opacity: 0.8;
+        }
+
         /* Scrolling code background effect */
         .code-line {
             position: absolute;
@@ -232,7 +243,7 @@
 
     <div class="content">
         <h1 id="title-text"></h1>
-        <h2>We hope you have a great time, Join the discord!</h2>
+        <h2>Have a great time, Join the discord for feedback.</h2>
 
         <div class="status-box">
             <div id="status-text">Connecting to server...</div>
@@ -248,18 +259,41 @@
                 <span id="files-count"></span>
             </div>
         </div>
+        
+        <div id="tips-container"></div>
     </div>
 
     <script>
         // Configuration
         const backgroundImages = [
-          "imag1.png",
-          "imag2.png",
-          "imag3.png",
-          "image5.png"
+            "imag1.png",
+            "imag2.png",
+            "imag3.png",
+            "image5.png"
         ];
         const slideDuration = 6000; // ms per slide
         const fadeDuration = 1500; // ms for fade transition
+
+        const tips = [
+            "Read the rules!",
+            "Make sure to type bind g fake in the console.",
+            "You may bleed out, patch yourself up quickly.",
+            "Attacking players give adrenaline, use this to your advantage.",
+            "Your shins are not your enemy, dont jump from high places.",
+            "Do not randomly kill players, you may get banned.",
+            "Make sure to verify that the person infront of you is your teammate.",
+            "Dont attack or tackle people, you may lose your innocence.",
+            "Losing your innocence will result in you becoming a target and they wont have any karma writeoff.",
+            "Be discreet, You are always vulnerable.",
+            "Join the discord.",
+            "Make sure to create an appearance in game so you are recognized.",
+            "Hold E and press RMB to loot props.",
+            "Weaponize your surroundings, You can grab various props as weaponry.",
+            "Death is usually the easy way out, let it go."
+
+
+        ];
+        const tipDuration = 5000; // ms per tip
 
         // Preload and Debug Images
         backgroundImages.forEach(src => {
@@ -311,6 +345,28 @@
         }
 
         initSlideshow();
+
+        // --- TIPS LOGIC ---
+        const tipsContainer = document.getElementById('tips-container');
+        let currentTip = 0;
+
+        function updateTip() {
+            if (tips.length === 0) return;
+            
+            // Simple fade effect could be added here, but for now just text switch
+            tipsContainer.style.opacity = 0;
+            
+            setTimeout(() => {
+                tipsContainer.innerText = "TIP: " + tips[currentTip];
+                tipsContainer.style.opacity = 0.8;
+                currentTip = (currentTip + 1) % tips.length;
+            }, 500);
+        }
+
+        if (tips.length > 0) {
+            updateTip(); // Show first immediately
+            setInterval(updateTip, tipDuration);
+        }
 
         // --- BACKGROUND CODE EFFECT ---
         const codeSnippets = [
