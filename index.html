@@ -150,29 +150,41 @@
             font-family: 'Courier New', monospace;
         }
 
-        .progress-bar-bg {
+        .scanner-container {
             width: 100%;
-            height: 16px;
-            background-color: #111;
-            border: 1px solid #ff7300;
-            margin-bottom: 8px;
+            height: 4px;
+            background: rgba(255, 115, 0, 0.2);
             position: relative;
+            overflow: hidden;
+            margin-top: 20px;
+            margin-bottom: 10px;
+            border: 1px solid rgba(255, 115, 0, 0.3);
         }
 
-        .progress-bar-fill {
+        .scanner-bar {
+            width: 40%;
             height: 100%;
             background: #ff7300;
-            width: 0%;
-            transition: width 0.1s linear;
-            box-shadow: 0 0 10px rgba(255, 115, 0, 0.5);
+            position: absolute;
+            left: -40%;
+            animation: scan 2s infinite ease-in-out;
+            box-shadow: 0 0 15px #ff7300;
         }
 
+        @keyframes scan {
+            0% { left: -40%; }
+            50% { left: 100%; }
+            100% { left: -40%; }
+        }
+        
+        /* Stats are now just for text info, centered */
         .stats {
             display: flex;
-            justify-content: space-between;
+            justify-content: center;
             font-size: 0.9em;
             color: #ff7300;
             font-weight: 700;
+            margin-top: 10px;
         }
 
         /* Scrolling code background effect */
@@ -226,31 +238,48 @@
             <div id="status-text">Connecting to server...</div>
             <div id="file-text">Initializing...</div>
             
-            <div class="progress-bar-bg">
-                <div class="progress-bar-fill" id="progress-bar"></div>
+            <!-- Indeterminate Scanner Bar -->
+            <div class="scanner-container">
+                <div class="scanner-bar"></div>
             </div>
             
+            <!-- Removed Percentage, keeping a simple count or status message if needed -->
             <div class="stats">
-                <span id="files-count">Files: 0/0</span>
-                <span id="percentage">0%</span>
+                <span id="files-count">SYSTEM READY</span>
             </div>
         </div>
     </div>
 
     <script>
-        // --- CONFIGURATION ---
-        // Add your image filenames here.
-        // Example: ["bg1.jpg", "bg2.png", "city_view.jpg"]
+        // Configuration
         const backgroundImages = [
-            "imag1.png", 
+            "imag1.png",
             "imag2.png",
             "imag3.png"
         ];
-        
-        const slideDuration = 5000; // Time in ms (5 seconds) per image
-        // ---------------------
+        const slideDuration = 6000; // ms per slide
+        const fadeDuration = 1500; // ms for fade transition
 
-        // Slideshow Logic
+        // Preload and Debug Images
+        backgroundImages.forEach(src => {
+            const img = new Image();
+            img.onerror = () => {
+                const err = document.createElement('div');
+                err.style.color = '#ff4444';
+                err.style.position = 'fixed';
+                err.style.top = '10px';
+                err.style.left = '10px';
+                err.style.zIndex = '10000';
+                err.style.background = 'rgba(0,0,0,0.8)';
+                err.style.padding = '5px';
+                err.style.fontFamily = 'monospace';
+                err.innerText = "IMG ERROR: " + src;
+                document.body.appendChild(err);
+            };
+            img.src = src;
+        });
+
+        // Background Slideshow Logic
         const bgContainer = document.getElementById('bg-container');
         let currentSlide = 0;
 
@@ -381,14 +410,11 @@
         
         const statusText = document.getElementById('status-text');
         const fileText = document.getElementById('file-text');
-        const progressBar = document.getElementById('progress-bar');
         const filesCount = document.getElementById('files-count');
-        const percentage = document.getElementById('percentage');
         const statusBox = document.querySelector('.status-box');
 
         let totalFiles = 0;
         let neededFiles = 0;
-        let downloadedFiles = 0;
         let baseStatus = "Connecting to server"; // Current status without dots
         
         // --- DOT ANIMATION LOGIC ---
@@ -408,14 +434,8 @@
         function DownloadingFile(fileName) {
             fileText.innerText = "Downloading " + fileName;
             
-            // If we are downloading but neededFiles is 0 or weird, 
-            // we manually decrement/adjust to show movement if possible, 
-            // but relying on GMod's SetFilesNeeded is usually safer.
-            // However, sometimes GMod gets stuck. 
-            // We can try to artificially bump progress if it seems stuck,
-            // but let's first ensure we catch the 'Workshop' case.
-            
-            refreshProgress();
+            // We just update the status text, no progress bar math needed anymore
+            filesCount.innerText = "DOWNLOADING ASSETS...";
         }
 
         // Called when the status changes (e.g., "Sending client info...")
@@ -426,84 +446,32 @@
             // Clear file text if not downloading
             if (status.indexOf("Downloading") === -1 && status.indexOf("Workshop") === -1) {
                 fileText.innerText = "";
+                filesCount.innerText = "PROCESSING...";
             }
 
             // Check for end states to hide the bar
             // "Sending client info" usually means we are done downloading and starting Lua
             if (status.indexOf("Sending client info") !== -1 || status.indexOf("Starting Lua") !== -1) {
                  statusBox.classList.add('fade-out');
-                 // Ensure progress shows full before fading
-                 progressBar.style.width = "100%";
-                 percentage.innerText = "100%";
-                 filesCount.innerText = "Ready";
+                 filesCount.innerText = "LAUNCHING...";
             }
             
-            // Fix for "Workshop Complete" getting stuck
             if (status.indexOf("Workshop Complete") !== -1) {
-                totalFiles = 1;
-                neededFiles = 0;
-                refreshProgress();
+                filesCount.innerText = "WORKSHOP COMPLETE";
             }
         }
 
         // Called to set the total number of files to download
         function SetFilesTotal(total) {
             totalFiles = total;
-            // Sometimes total is reported as 0 or 1 incorrectly at start
-            if (total > 0) refreshProgress();
         }
 
         // Called to set the number of files needed
         function SetFilesNeeded(needed) {
             neededFiles = needed;
-            refreshProgress();
-        }
-
-        function refreshProgress() {
-            // Safety check
-            if (totalFiles === 0) return;
-
-            // Calculate progress
-            let currentDownloaded = totalFiles - neededFiles;
-            
-            // Sanity checks
-            if (currentDownloaded < 0) currentDownloaded = 0;
-            if (currentDownloaded > totalFiles) currentDownloaded = totalFiles;
-
-            let progress = (currentDownloaded / totalFiles) * 100;
-            
-            // Update UI
-            progressBar.style.width = progress + "%";
-            percentage.innerText = Math.round(progress) + "%";
-            filesCount.innerText = currentDownloaded + " / " + totalFiles;
-            
-            // If we are basically done (99%+) snap to 100
-            if (progress >= 99) {
-                 progressBar.style.width = "100%";
-                 percentage.innerText = "100%";
-            }
         }
         
-        // --- Testing / Fallback ---
-        // Uncomment to test in browser without GMod
-        /*
-        setTimeout(() => {
-            SetStatus("Downloading Addons...");
-            SetFilesTotal(100);
-            SetFilesNeeded(100);
-            
-            let i = 0;
-            let interval = setInterval(() => {
-                i++;
-                SetFilesNeeded(100 - i);
-                DownloadingFile("models/props_c17/furniture_" + i + ".mdl");
-                if (i >= 100) {
-                    clearInterval(interval);
-                    SetStatus("Sending Client Info...");
-                }
-            }, 50);
-        }, 1000);
-        */
+        // No refreshProgress() needed anymore since we use a scanner bar
 
     </script>
 </body>
