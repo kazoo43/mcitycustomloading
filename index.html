@@ -196,6 +196,20 @@
             pointer-events: none;
         }
 
+        /* Hide default GMod loader elements if present */
+        .loading-image, 
+        .loading-bar, 
+        #status, 
+        #progress, 
+        #servername, 
+        #client, 
+        #map, 
+        .loadingpanel, 
+        .loading, 
+        .loadingbox { 
+            display: none !important; 
+        }
+
     </style>
 </head>
 <body>
@@ -393,6 +407,14 @@
         // Called when a file starts downloading
         function DownloadingFile(fileName) {
             fileText.innerText = "Downloading " + fileName;
+            
+            // If we are downloading but neededFiles is 0 or weird, 
+            // we manually decrement/adjust to show movement if possible, 
+            // but relying on GMod's SetFilesNeeded is usually safer.
+            // However, sometimes GMod gets stuck. 
+            // We can try to artificially bump progress if it seems stuck,
+            // but let's first ensure we catch the 'Workshop' case.
+            
             refreshProgress();
         }
 
@@ -413,6 +435,7 @@
                  // Ensure progress shows full before fading
                  progressBar.style.width = "100%";
                  percentage.innerText = "100%";
+                 filesCount.innerText = "Ready";
             }
             
             // Fix for "Workshop Complete" getting stuck
@@ -426,7 +449,8 @@
         // Called to set the total number of files to download
         function SetFilesTotal(total) {
             totalFiles = total;
-            refreshProgress();
+            // Sometimes total is reported as 0 or 1 incorrectly at start
+            if (total > 0) refreshProgress();
         }
 
         // Called to set the number of files needed
@@ -436,22 +460,27 @@
         }
 
         function refreshProgress() {
-            // Fix: If we have files but needed is 0, that's 100%
-            if (neededFiles === 0 && totalFiles > 0) {
+            // Safety check
+            if (totalFiles === 0) return;
+
+            // Calculate progress
+            let currentDownloaded = totalFiles - neededFiles;
+            
+            // Sanity checks
+            if (currentDownloaded < 0) currentDownloaded = 0;
+            if (currentDownloaded > totalFiles) currentDownloaded = totalFiles;
+
+            let progress = (currentDownloaded / totalFiles) * 100;
+            
+            // Update UI
+            progressBar.style.width = progress + "%";
+            percentage.innerText = Math.round(progress) + "%";
+            filesCount.innerText = currentDownloaded + " / " + totalFiles;
+            
+            // If we are basically done (99%+) snap to 100
+            if (progress >= 99) {
                  progressBar.style.width = "100%";
                  percentage.innerText = "100%";
-                 filesCount.innerText = totalFiles + " / " + totalFiles;
-                 return;
-            }
-
-            if (totalFiles > 0) {
-                let currentDownloaded = totalFiles - neededFiles;
-                let progress = (currentDownloaded / totalFiles) * 100;
-                progress = Math.max(0, Math.min(100, progress));
-                
-                progressBar.style.width = progress + "%";
-                percentage.innerText = Math.round(progress) + "%";
-                filesCount.innerText = currentDownloaded + " / " + totalFiles;
             }
         }
         
