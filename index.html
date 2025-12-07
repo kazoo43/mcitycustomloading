@@ -190,6 +190,12 @@
             to { transform: translateX(100vw); }
         }
 
+        .fade-out {
+            opacity: 0;
+            transition: opacity 1.5s ease-out;
+            pointer-events: none;
+        }
+
     </style>
 </head>
 <body>
@@ -364,27 +370,56 @@
         const progressBar = document.getElementById('progress-bar');
         const filesCount = document.getElementById('files-count');
         const percentage = document.getElementById('percentage');
+        const statusBox = document.querySelector('.status-box');
 
         let totalFiles = 0;
         let neededFiles = 0;
         let downloadedFiles = 0;
+        let baseStatus = "Connecting to server"; // Current status without dots
+        
+        // --- DOT ANIMATION LOGIC ---
+        let dotCount = 0;
+        setInterval(() => {
+            dotCount = (dotCount + 1) % 4; // Cycles 0, 1, 2, 3
+            let dots = "";
+            for(let i=0; i<dotCount; i++) dots += ".";
+            
+            // Only update if we are not fading out
+            if (!statusBox.classList.contains('fade-out')) {
+                statusText.innerText = baseStatus + dots;
+            }
+        }, 500);
 
         // Called when a file starts downloading
         function DownloadingFile(fileName) {
             fileText.innerText = "Downloading " + fileName;
-            
-            // Sometimes GMod calls this without updating needed/total
-            // We update the view here
             refreshProgress();
         }
 
         // Called when the status changes (e.g., "Sending client info...")
         function SetStatus(status) {
-            statusText.innerText = status;
+            // Remove existing dots if GMod sends them, so we can control animation
+            baseStatus = status.replace(/\.+$/, ''); 
             
             // Clear file text if not downloading
             if (status.indexOf("Downloading") === -1 && status.indexOf("Workshop") === -1) {
                 fileText.innerText = "";
+            }
+
+            // Check for end states to hide the bar
+            // "Sending client info" usually means we are done downloading and starting Lua
+            if (status.indexOf("Sending client info") !== -1 || status.indexOf("Starting Lua") !== -1) {
+                 statusBox.classList.add('fade-out');
+                 // Ensure progress shows full before fading
+                 progressBar.style.width = "100%";
+                 percentage.innerText = "100%";
+            }
+            
+            // Fix for "Workshop Complete" getting stuck
+            if (status.indexOf("Workshop Complete") !== -1) {
+                totalFiles = 1;
+                neededFiles = 0;
+                refreshProgress();
             }
         }
 
@@ -401,18 +436,19 @@
         }
 
         function refreshProgress() {
+            // Fix: If we have files but needed is 0, that's 100%
+            if (neededFiles === 0 && totalFiles > 0) {
+                 progressBar.style.width = "100%";
+                 percentage.innerText = "100%";
+                 filesCount.innerText = totalFiles + " / " + totalFiles;
+                 return;
+            }
+
             if (totalFiles > 0) {
-                // neededFiles decreases as we download
-                // downloaded = total - needed
                 let currentDownloaded = totalFiles - neededFiles;
-                
-                // Calculate percentage
                 let progress = (currentDownloaded / totalFiles) * 100;
-                
-                // Clamp
                 progress = Math.max(0, Math.min(100, progress));
                 
-                // Update UI
                 progressBar.style.width = progress + "%";
                 percentage.innerText = Math.round(progress) + "%";
                 filesCount.innerText = currentDownloaded + " / " + totalFiles;
