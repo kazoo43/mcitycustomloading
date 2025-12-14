@@ -273,7 +273,16 @@
             "imag1.png",
             "imag2.png",
             "imag3.png",
-            "image5.png"
+            "imag5.png",
+            "imag6.png",
+            "imag7.png",
+            "imag8.png",
+            "imag9.png",
+            "imag10.png",
+            "imag11.png",
+            "imag12.png",
+            "imag13.png",
+            "imag14.png"
         ];
         const slideDuration = 6000; // ms per slide
         const fadeDuration = 1500; // ms for fade transition
@@ -293,7 +302,8 @@
             "Make sure to create an appearance in game so you are recognized.",
             "Hold E and press RMB to loot props.",
             "Weaponize your surroundings, You can grab various props as weaponry.",
-            "Death is usually the easy way out, let it go."
+            "Death is usually the easy way out, let it go.",
+            "Red circle means that you are dying, white circle means you are unconscious."
 
 
         ];
@@ -423,7 +433,7 @@
 
         // Typewriter Effect
         const titleText = document.getElementById('title-text');
-        const titles = ["Crows ZCity", "MeleeCity"];
+        const titles = ["Crows Tuffcity", "MeleeCity"];
         let titleIndex = 0;
         let charIndex = 0;
         let isDeleting = false;
@@ -431,6 +441,15 @@
 
         function typeWriter() {
             const currentTitle = titles[titleIndex];
+            
+            // Color change logic
+            if (currentTitle === "Crows Tuffcity") {
+                titleText.style.color = "#00ff00"; 
+                titleText.style.textShadow = "0 0 10px rgba(0, 255, 0, 0.5)";
+            } else {
+                titleText.style.color = "#ff7300";
+                titleText.style.textShadow = "0 0 10px rgba(255, 115, 0, 0.5)";
+            }
             
             // If waiting, do nothing but check time (handled by timeout)
             if (isWaiting) return;
